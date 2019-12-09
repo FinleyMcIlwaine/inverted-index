@@ -11,7 +11,7 @@ import (
     "path/filepath"
     "regexp"
     "strings"
-//    "encoding/json"
+    "encoding/json"
 )
 
 func main() {
@@ -67,7 +67,7 @@ func main() {
                 if _, ok := pairs[words[j-1]][w]; ok {
                     wpIndex.addWordPair(words[j-1],w,i,j)
                     oldW := wIndex.Index[words[j-1]]
-                    wIndex.Index[words[j-1]] = word{ oldW.Ft,oldW.Fdt,true }
+                    wIndex.Index[words[j-1]] = &word{ oldW.Ft,oldW.Fdt,true }
                 } else {
                     pairs[words[j-1]][w] = true
                 }
@@ -76,10 +76,32 @@ func main() {
     }
 
     // Write the indexes to a file
-    // indexJson, err := json.MarshalIndent(wIndex, "", "    ")
+    os.Remove("indexes.log");
+    f, err := os.OpenFile("indexes.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err!=nil {
+        fmt.Printf("Something went wrong opening the log file: %v\n", err)
+    }
+    indexJson, err := json.MarshalIndent(wIndex, "", "  ")
     if err!=nil {
         fmt.Printf("Something went wrong marshaling the word index: %v\n", err)
         return
     }
-    fmt.Printf("The word index json:\n%+v",wIndex)
+    if _, err := f.Write(append([]byte("Word bag index:\n\n"),indexJson...)); err != nil {
+        f.Close();
+        fmt.Printf("Something went wrong writing the word index to the log: %v\n", err)
+        return
+    }
+    indexJson, err = json.MarshalIndent(wpIndex, "", "  ")
+    if err!=nil {
+        fmt.Printf("Something went wrong marshaling the pair index: %v\n", err)
+        return
+    }
+    if _, err := f.Write(
+        append([]byte("\n\nWord pair index:\n\n"),
+        append(indexJson,[]byte("\n")...)...)); err != nil {
+        f.Close();
+        fmt.Printf("Something went wrong writing the pair index to the log: %v\n", err)
+        return
+    }
+    
 }

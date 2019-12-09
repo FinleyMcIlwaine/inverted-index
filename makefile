@@ -12,7 +12,7 @@ all: main
 main: main.go
 	go build ${OUT} ${FILES} 
 
-clean: tidy
+clean:
 	/bin/rm -rf invert
 
 tarball:

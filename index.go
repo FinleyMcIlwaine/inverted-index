@@ -5,11 +5,11 @@
 package main
 
 type WordIndex struct {
-    Index   map[string]word
+    Index   map[string]*word
 }
 
 type WordPairIndex struct {
-    Index   map[string]map[string]wordPair
+    Index   map[string]map[string]*wordPair
 }
 
 type fdtData struct {
@@ -30,11 +30,11 @@ type wordPair struct {
 }
 
 func (wi *WordIndex) Init() {
-    wi.Index = make(map[string]word)
+    wi.Index = make(map[string]*word)
 }
 
 func (wpi *WordPairIndex) Init() {
-    wpi.Index = make(map[string]map[string]wordPair)
+    wpi.Index = make(map[string]map[string]*wordPair)
 }
 
 func (w *word) setToPaired() {
@@ -43,7 +43,7 @@ func (w *word) setToPaired() {
 
 func (wi *WordIndex) addWord(t string, d int, p int) {
     if w, ok := wi.Index[t]; ok {
-        w.Ft++
+        wi.Index[t].Ft++
         ind := -1
         for i, fdt := range w.Fdt {
             if d == fdt.Document {
@@ -52,13 +52,13 @@ func (wi *WordIndex) addWord(t string, d int, p int) {
             }
         }
         if ind==-1 {
-            w.Fdt = append(w.Fdt,fdtData{1,d,[]int{p}})
+            wi.Index[t].Fdt = append(w.Fdt,fdtData{1,d,[]int{p}})
         } else {
-            w.Fdt[ind].Frequency++
-            w.Fdt[ind].Positions = append(w.Fdt[ind].Positions, p)
+            wi.Index[t].Fdt[ind].Frequency++
+            wi.Index[t].Fdt[ind].Positions = append(wi.Index[t].Fdt[ind].Positions, p)
         }
     } else {
-        wi.Index[t] = word{ 1, []fdtData{fdtData{1,d,[]int{p}}}, false }
+        wi.Index[t] = &word{ 1, []fdtData{fdtData{1,d,[]int{p}}}, false }
     }
 }
 
@@ -78,5 +78,9 @@ func (wpi *WordPairIndex) addWordPair(w1 string, w2 string, d int, p int) {
             wp.Fdt[ind].Frequency++
             wp.Fdt[ind].Positions = append(wp.Fdt[ind].Positions, p)
         }
-    } // TODO Handle the else case here!!!!! How to initialize inner map?
+    } else if wMap, ok := wpi.Index[w1]; ok {
+        wMap[w2] = &wordPair { 0, []fdtData{fdtData{1, d, []int{p}}} }
+    } else {
+        wpi.Index[w1] = map[string]*wordPair{ w2: &wordPair{ 0, []fdtData{fdtData{1, d, []int{p}}} }}
+    }
 }
