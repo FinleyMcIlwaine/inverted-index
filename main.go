@@ -57,7 +57,7 @@ func main() {
         }
         fText := string(fBytes)
         fText  = notWord.ReplaceAllString(fText," ")
-        words := strings.Fields(fText)
+        words := strings.Fields(strings.ToLower(fText))
         for j, w := range words {
             wIndex.addWord(w, i, j)
             if _, ok := pairs[w]; !ok {
@@ -103,5 +103,8 @@ func main() {
         fmt.Printf("Something went wrong writing the pair index to the log: %v\n", err)
         return
     }
+    f.Close()
+    
+    // Now prompt for a user search and do the actual search
     
 }

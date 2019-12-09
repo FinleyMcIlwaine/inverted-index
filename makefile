@@ -13,7 +13,7 @@ main: main.go
 	go build ${OUT} ${FILES} 
 
 clean:
-	/bin/rm -rf invert
+	/bin/rm -rf invert indexes.log
 
 tarball:
 	rm -rf tarball

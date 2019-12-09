@@ -43,7 +43,6 @@ func (w *word) setToPaired() {
 
 func (wi *WordIndex) addWord(t string, d int, p int) {
     if w, ok := wi.Index[t]; ok {
-        wi.Index[t].Ft++
         ind := -1
         for i, fdt := range w.Fdt {
             if d == fdt.Document {
@@ -52,6 +51,7 @@ func (wi *WordIndex) addWord(t string, d int, p int) {
             }
         }
         if ind==-1 {
+            wi.Index[t].Ft++
             wi.Index[t].Fdt = append(w.Fdt,fdtData{1,d,[]int{p}})
         } else {
             wi.Index[t].Fdt[ind].Frequency++
@@ -64,7 +64,6 @@ func (wi *WordIndex) addWord(t string, d int, p int) {
 
 func (wpi *WordPairIndex) addWordPair(w1 string, w2 string, d int, p int) {
     if wp, ok := wpi.Index[w1][w2]; ok {
-        wp.Ft++
         ind := -1
         for i, fdt := range wp.Fdt {
             if d == fdt.Document {
@@ -73,6 +72,7 @@ func (wpi *WordPairIndex) addWordPair(w1 string, w2 string, d int, p int) {
             }
         }
         if ind==-1 {
+            wp.Ft++
             wp.Fdt = append(wp.Fdt, fdtData{1,d,[]int{p}})
         } else {
             wp.Fdt[ind].Frequency++
