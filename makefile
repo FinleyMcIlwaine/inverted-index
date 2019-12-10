@@ -18,5 +18,5 @@ clean:
 tarball:
 	rm -rf tarball
 	mkdir tarball
-	tar -cf ./tarball/program5.tar makefile ${FILES}
+	tar -cvf ./tarball/program5.tar makefile ${FILES} ./test-docs
 
