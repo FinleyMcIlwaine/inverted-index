@@ -13,10 +13,10 @@ main: main.go
 	go build ${OUT} ${FILES} 
 
 clean:
-	/bin/rm -rf invert indexes.log
+	/bin/rm -rf invert indexes.log ./tarball
 
 tarball:
 	rm -rf tarball
 	mkdir tarball
-	tar -cvf ./tarball/program5.tar makefile ${FILES} ./test-docs
+	tar -cvf ./tarball/invert.tar makefile ${FILES} ./test-docs
 
