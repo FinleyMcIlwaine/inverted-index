@@ -12,6 +12,8 @@ import (
     "regexp"
     "strings"
     "encoding/json"
+    "bufio"
+    "math"
 )
 
 func main() {
@@ -25,11 +27,9 @@ func main() {
             fmt.Printf("Something went wrong accessing path '%q': %v\n", path, err)
             return err
         }
-        if !info.IsDir() {
-            // Only index .txt or .md files
-            if ext := filepath.Ext(path); ext == ".md" || ext == ".txt" {
-                ixFiles = append(ixFiles,path)
-            }
+        // Only index .txt or .md files
+        if ext := filepath.Ext(path); ext == ".md" || ext == ".txt" {
+            ixFiles = append(ixFiles,path)
         }
         return nil
     })
@@ -99,12 +99,69 @@ func main() {
     if _, err := f.Write(
         append([]byte("\n\nWord pair index:\n\n"),
         append(indexJson,[]byte("\n")...)...)); err != nil {
-        f.Close();
-        fmt.Printf("Something went wrong writing the pair index to the log: %v\n", err)
-        return
+            f.Close();
+            fmt.Printf("Something went wrong writing the pair index to the log: %v\n", err)
+            return
     }
-    f.Close()
-    
+
     // Now prompt for a user search and do the actual search
-    
+    reader := bufio.NewReader(os.Stdin);
+    for {
+        fmt.Print("Enter a search query (:q to quit): ")
+        text, _ := reader.ReadString('\n')
+        if text==":q\n" {
+            break
+        } else {
+            text = notWord.ReplaceAllString(text," ")
+            words := strings.Fields(strings.ToLower(text));
+
+            // Accumulators for documents
+            aDocs := make([]float64, len(ixFiles))
+            wDocs := make([]float64, len(ixFiles))
+            sDocs := make([]float64, len(ixFiles))
+            // For each word and pair
+            for i, w := range words {
+                // Calculate wqt for each word
+                wqt := wIndex.Wqt(w,len(ixFiles))
+                // For each term doc pair
+                if wqt > 0 {
+                    for _, fdt := range wIndex.Index[w].Fdt {
+                        wdt := 1 + math.Log(float64(fdt.Frequency))
+                        wDocs[fdt.Document] += wdt*wdt
+                        aDocs[fdt.Document] += wqt*wdt
+                    }
+                }
+                if i>0 {
+                    pwqt := wpIndex.Wqt(words[i-1], w, len(ixFiles))
+                    if pwqt > 0 {
+                        for _, fdt := range wpIndex.Index[words[i-1]][w].Fdt {
+                            pwdt := 1 + math.Log(float64(fdt.Frequency))
+                            wDocs[fdt.Document] += pwdt*pwdt
+                            aDocs[fdt.Document] += 4.0*pwqt*pwdt
+                        }
+                    }
+                }
+            }
+            for i, d := range aDocs {
+                if d > 0 {
+                    sDocs[i] = d / wDocs[i]
+                }
+            }
+            fCopy := make([]string, len(ixFiles))
+            copy(fCopy,ixFiles)
+            for i := len(sDocs)-1; i>=0; i-- {
+                for j := i; j<len(sDocs)-1; j++ {
+                    if sDocs[j+1] > sDocs[j] {
+                        sDocs[j+1],sDocs[j] = sDocs[j],sDocs[j+1]
+                        fCopy[j+1],fCopy[j] = fCopy[j],fCopy[j+1]
+                    }
+                }
+            }
+            fmt.Print("\nResults:\n")
+            for i, s := range sDocs {
+                fmt.Printf("\n    %d: %s, s = %.5f",i+1,fCopy[i],s)
+            }
+            fmt.Print("\n\n")
+        }
+    }
 }

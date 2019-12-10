@@ -4,6 +4,8 @@
 
 package main
 
+import "math"
+
 type WordIndex struct {
     Index   map[string]*word
 }
@@ -37,8 +39,20 @@ func (wpi *WordPairIndex) Init() {
     wpi.Index = make(map[string]map[string]*wordPair)
 }
 
-func (w *word) setToPaired() {
-    w.Paired=true
+func (wi *WordIndex) Wqt(t string, n int) float64 {
+    if _, ok := wi.Index[t]; ok {
+        return math.Log(1+float64(n)/float64(wi.Index[t].Ft))
+    } else {
+        return 0
+    }
+}
+
+func (wpi *WordPairIndex) Wqt(t1 string, t2 string, n int) float64 {
+    if _, ok := wpi.Index[t1][t2]; ok {
+        return math.Log(1+float64(n)/float64(wpi.Index[t1][t2].Ft))
+    } else {
+        return 0
+    }
 }
 
 func (wi *WordIndex) addWord(t string, d int, p int) {
@@ -79,8 +93,8 @@ func (wpi *WordPairIndex) addWordPair(w1 string, w2 string, d int, p int) {
             wp.Fdt[ind].Positions = append(wp.Fdt[ind].Positions, p)
         }
     } else if wMap, ok := wpi.Index[w1]; ok {
-        wMap[w2] = &wordPair { 0, []fdtData{fdtData{1, d, []int{p}}} }
+        wMap[w2] = &wordPair { 1, []fdtData{fdtData{1, d, []int{p}}} }
     } else {
-        wpi.Index[w1] = map[string]*wordPair{ w2: &wordPair{ 0, []fdtData{fdtData{1, d, []int{p}}} }}
+        wpi.Index[w1] = map[string]*wordPair{ w2: &wordPair{ 1, []fdtData{fdtData{1, d, []int{p}}} }}
     }
 }
